@@ -1,7 +1,7 @@
 extern crate byteorder;
 
 use crate::memory::{create_memory, Memory};
-use byteorder::{LittleEndian, ByteOrder};
+use byteorder::{BigEndian, ByteOrder};
 
 #[derive(Debug, Clone)]
 pub enum Register {
@@ -12,24 +12,24 @@ pub enum Register {
 }
 
 impl Register {
-  fn to_idx(self) -> usize {
-    return self as usize * 2; 
-  }
-  fn from_idx(idx: u8) -> Option<Self> {
-      match idx {
-        0 => Some(Register::IP),
-        1 => Some(Register::ACC),
-        2 => Some(Register::R1),
-        3 => Some(Register::R2),
-        4 => Some(Register::R3),
-        5 => Some(Register::R4),
-        6 => Some(Register::R5),
-        7 => Some(Register::R6),
-        8 => Some(Register::R7),
-        9 => Some(Register::R8),
-        _ => None 
-      }
-  }
+    fn to_idx(self) -> usize {
+        return self as usize * 2; 
+    }
+    fn from_idx(idx: u8) -> Option<Self> {
+        match idx {
+            0 => Some(Register::IP),
+            1 => Some(Register::ACC),
+            2 => Some(Register::R1),
+            3 => Some(Register::R2),
+            4 => Some(Register::R3),
+            5 => Some(Register::R4),
+            6 => Some(Register::R5),
+            7 => Some(Register::R6),
+            8 => Some(Register::R7),
+            9 => Some(Register::R8),
+            _ => None 
+        }
+    }
 }
 
 pub enum Instruction {
@@ -38,6 +38,7 @@ pub enum Instruction {
     AddRegReg = 0x12,
 }
 
+#[derive(Debug)]
 pub struct CPU {
     memory: Memory, 
     registers: Memory,
@@ -78,13 +79,15 @@ impl CPU {
     /// Given the Register, give back the 16 bit value
     fn get_register(&self, register: Register) -> u16 {
         let idx = register.to_idx();
-        return LittleEndian::read_u16(&self.registers[idx..idx+2]);
+        let val =  BigEndian::read_u16(&self.registers[idx..idx+2]);
+        println!("reg value::::: {}", val);
+        return val;
     }
 
     /// Givem the Register and the 16 bit value, set it in the register memory
     fn set_register(&mut self, register: Register, value: u16) {
         let idx = register.to_idx();
-        return LittleEndian::write_u16(&mut self.registers[idx..idx+2], value);
+        return BigEndian::write_u16(&mut self.registers[idx..idx+2], value);
     }
 
     fn fetch(&mut self) -> u8 {
@@ -92,12 +95,13 @@ impl CPU {
         let instruction = self.memory[instruction_addr];
         self.set_register(Register::IP, instruction_addr as u16 + 1);
 
+        println!("instruction::::::: {}", instruction);
         return instruction;
     }
 
     fn fetch16(&mut self) -> u16 {
         let instruction_addr = self.get_register(Register::IP) as usize;
-        let instruction = LittleEndian::read_u16(&self.memory[instruction_addr..instruction_addr+2]);
+        let instruction = BigEndian::read_u16(&self.memory[instruction_addr..instruction_addr+2]);
         self.set_register(Register::IP, instruction_addr as u16 + 2);
 
         return instruction;
@@ -106,27 +110,32 @@ impl CPU {
     pub fn execute(&mut self, instruction: u8) {
         match instruction {
             //Instruction::MovLitR1 => {
-            0x01 => {
+            0x10 => {
                 let literal = self.fetch16();
+                println!("MovLitR1 literal: {}", literal);
                 self.set_register(Register::R1, literal);
             },
             //Instruction::MovLitR2 => {
-            0x02 => {
+            0x11 => {
                 let literal = self.fetch16();
+                println!("MovLitR2 literal: {}", literal);
                 self.set_register(Register::R2, literal);
             },
             //Instruction::AddRegReg => {
-            0x03 => {
+            0x12 => {
                 let r1_idx = self.fetch();
                 let r2_idx = self.fetch();
                 let register_value1 = self.get_register(Register::from_idx(r1_idx).unwrap());
                 let register_value2 = self.get_register(Register::from_idx(r2_idx).unwrap());
+                println!("add reg reg : {}, {}, {}, {}", r1_idx, r2_idx, register_value1, register_value2);
                 self.set_register(Register::ACC, register_value1.wrapping_add(register_value2));
             }
-            _ => {}
+            _ => {
+                println!("No instruction was matched....")
+            },
         }
     }
-pub fn step(&mut self) {
+    pub fn step(&mut self) {
         let instruction = self.fetch();
         self.execute(instruction);
     }

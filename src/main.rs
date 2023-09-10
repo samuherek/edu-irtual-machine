@@ -18,9 +18,9 @@ fn main() {
     cpu.set_memory(5, 0xCB);
 
     // Instruction add reg reg
-    cpu.set_memory(3, 0x12);
-    cpu.set_memory(4, 2); // r1 idx 
-    cpu.set_memory(5, 3); // r2 idx
+    cpu.set_memory(6, 0x12);
+    cpu.set_memory(7, 2); // r1 idx 
+    cpu.set_memory(8, 3); // r2 idx
 
     cpu.debug();
 
