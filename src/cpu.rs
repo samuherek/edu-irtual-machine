@@ -76,15 +76,13 @@ impl CPU {
         println!();
     }
 
-    /// Given the Register, give back the 16 bit value
     fn get_register(&self, register: Register) -> u16 {
         let idx = register.to_idx();
         let val =  BigEndian::read_u16(&self.registers[idx..idx+2]);
-        println!("reg value::::: {}", val);
+
         return val;
     }
 
-    /// Givem the Register and the 16 bit value, set it in the register memory
     fn set_register(&mut self, register: Register, value: u16) {
         let idx = register.to_idx();
         return BigEndian::write_u16(&mut self.registers[idx..idx+2], value);
@@ -95,7 +93,6 @@ impl CPU {
         let instruction = self.memory[instruction_addr];
         self.set_register(Register::IP, instruction_addr as u16 + 1);
 
-        println!("instruction::::::: {}", instruction);
         return instruction;
     }
 
@@ -112,13 +109,11 @@ impl CPU {
             //Instruction::MovLitR1 => {
             0x10 => {
                 let literal = self.fetch16();
-                println!("MovLitR1 literal: {}", literal);
                 self.set_register(Register::R1, literal);
             },
             //Instruction::MovLitR2 => {
             0x11 => {
                 let literal = self.fetch16();
-                println!("MovLitR2 literal: {}", literal);
                 self.set_register(Register::R2, literal);
             },
             //Instruction::AddRegReg => {
@@ -127,14 +122,26 @@ impl CPU {
                 let r2_idx = self.fetch();
                 let register_value1 = self.get_register(Register::from_idx(r1_idx).unwrap());
                 let register_value2 = self.get_register(Register::from_idx(r2_idx).unwrap());
-                println!("add reg reg : {}, {}, {}, {}", r1_idx, r2_idx, register_value1, register_value2);
-                self.set_register(Register::ACC, register_value1.wrapping_add(register_value2));
+                self.set_register(Register::ACC, register_value1 + register_value2);
             }
             _ => {
                 println!("No instruction was matched....")
             },
         }
     }
+
+    pub fn peak_mem(&self) {
+        println!("{:?}", self.memory);
+    }
+
+    pub fn peak_reg(&self) {
+        let _ = self.registers.iter()
+            .zip(self.registers.iter().skip(1))
+            .inspect(|(a, b)| {
+                println!("{:X}{:X}", a, b);
+            }).collect::<Vec<_>>();
+    }
+
     pub fn step(&mut self) {
         let instruction = self.fetch();
         self.execute(instruction);
