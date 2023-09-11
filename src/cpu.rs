@@ -3,11 +3,6 @@ extern crate byteorder;
 use crate::memory::Memory;
 use crate::register::{Register, RegisterKey};
 
-pub enum Instruction {
-    MovLitR1 = 0x10,
-    MovLitR2 = 0x11,
-    AddRegReg = 0x12,
-}
 
 #[derive(Debug)]
 pub struct CPU<'a> {
@@ -48,6 +43,8 @@ impl<'a> CPU<'a> {
 
         return instruction;
     }
+
+
 
     pub fn execute(&mut self, instruction: u8) {
         match instruction {

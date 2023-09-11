@@ -1,9 +1,11 @@
 mod memory;
 mod register;
 mod cpu;
+mod instructions;
 
 use crate::memory::Memory;
 use crate::cpu::CPU;
+use crate::register::RegisterKey;
 
 fn load_program(memory: &mut Memory) {
     // Instruction mov lit r1.
@@ -18,8 +20,8 @@ fn load_program(memory: &mut Memory) {
 
     // Instruction add reg reg
     memory.write_u8(6, 0x12);
-    memory.write_u8(7, 2);
-    memory.write_u8(8, 3);
+    memory.write_u8(7, RegisterKey::R1 as u8);
+    memory.write_u8(8, RegisterKey::R2 as u8);
 }
 
 fn main() {
